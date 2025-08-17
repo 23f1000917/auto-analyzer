@@ -2,6 +2,7 @@ import os
 import re
 import io
 import yaml
+import uuid 
 import json 
 import glob
 import base64
@@ -13,9 +14,10 @@ import builtins  # Added for execution environment
 from PIL import Image
 from io import BytesIO
 from typing import Any
-from datetime import datetime
+from pathlib import Path
 from google import genai
 from textwrap import dedent 
+from datetime import datetime
 from dotenv import load_dotenv 
 from PIL.ImageFile import ImageFile
 from fastapi import FastAPI, Request
@@ -44,14 +46,14 @@ app = FastAPI()
 async def analyze(request: Request):
     logger.info("Starting analysis request")
     start_time = datetime.now()
-    
     try:
         # create problem instance 
         problem = await create_problem_instance(request)  
-        logger.info(f"Problem instance created.")
-
+        logger.info(f"Problem instance created with request_id: {problem.request_id}")
+        
         # use LLM to create metadata_dict then create metadata_text using yaml 
         logger.info("Generating problem metadata...")
+        
         problem.metadata_dict = generate_problem_metadata(problem) 
         problem.metadata_text = yaml_dump(problem.metadata_dict)
         logger.info(f"Generated metadata:\n{problem.metadata_text}")
@@ -101,20 +103,32 @@ async def analyze(request: Request):
         return {"error": "Analysis failed", "message": str(e)}
 
     finally:
-        # Clean up request files
-        files = glob.glob("request_data/*")
-        for f in files:
+        try:
+            for file_path in problem.request_data_path.glob("*"):
+                try:
+                    file_path.unlink()
+                    logger.info(f"Deleted temporary file: {file_path}")
+                except Exception as e:
+                    logger.error(f"Failed to delete {file_path}: {e}")
+            
+            # Remove the directory itself
             try:
-                os.remove(f)
-                logger.info(f"Deleted temporary file: {f}")
+                problem.request_data_path.rmdir()
+                logger.info(f"Deleted request directory: {problem.request_data_path}")
             except Exception as e:
-                logger.info(f"Failed to delete {f}: {e}")
+                logger.error(f"Failed to delete directory {problem.request_data_path}: {e}")
+        except Exception as e:
+            logger.error(f"Error during cleanup for request {problem.request_id}: {e}")
             
 # ------------------------------------------ Main Pipeline --------------------------------------------------
 
 class Problem:
     def __init__(self) -> None:
         logger.info("Initializing new Problem instance")
+        self.request_id: str = request_id = uuid.uuid4().hex[:8]
+        self.request_data_path = Path(f"request_data/{request_id}")
+        self.request_data_path.mkdir(parents=True, exist_ok=True)
+
         # The properties suffixed with 'text' are to be used with LLM prompts
         self.questions_text: str = ""                  # 'questions.txt' content      
         self.image_dict : dict[str, ImageFile] = {}    # attached images 
@@ -157,8 +171,8 @@ async def create_problem_instance(request: Request) -> Problem:
 
             else:
                 file_content = await upload_file.read()
-                os.makedirs("request_data", exist_ok=True) 
-                with open(f"request_data/{name}", "wb") as f:
+                file_path = Path(f"request_data/{problem.request_id}/{name}")
+                with open(file_path, "wb") as f:
                     f.write(file_content)
                 problem.file_dict[name] = file_content
                 logger.info(f"Added file to file_dict: {name}")
@@ -198,7 +212,7 @@ def load_files_as_dfs(p: Problem) -> list[pd.DataFrame]:
     from prompts import FILE_LOADING_PROMPT, FILE_LOADING_SCHEMA
 
     logger.info("Loading files as dataframes")
-    prompt_text = FILE_LOADING_PROMPT.format(data_source_text = p.data_source_text)
+    prompt_text = FILE_LOADING_PROMPT.format(data_source_text = p.data_source_text, request_id=p.request_id)
     logger.info(f"File loading prompt:\n{prompt_text}")
 
     response_json = ask_LLM(contents=[prompt_text], response_schema=FILE_LOADING_SCHEMA) 
