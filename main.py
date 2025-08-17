@@ -367,10 +367,14 @@ def run_question_script(script: str, p: Problem, qno: int, max_tries: int = 10) 
 def generate_output(p: Problem, answers):
     from prompts import OUTPUT_SCRIPT_TEMPLATE, OUTPUT_SCRIPT_SCHEMA
 
+    answers_list_text = ", ".join([
+        f"<{str(type(a)).split('.')[-1][:-2]}> {str(a)[:20]}{'...(truncated)' if len(str(a)) > 20 else ''}"
+        for a in answers
+    ])
     logger.info("Generating final output")
     prompt_text = OUTPUT_SCRIPT_TEMPLATE.format(
         questions_list_text = p.questions_list_text,
-        answers_list_text = ", ".join([(str(a)[:20] + "...(truncated)") if len(str(a)) > 20 else str(a) for a in answers]),
+        answers_list_text = answers_list_text,
         output_format_text = p.output_format_text
     )
     logger.debug(f"Output generation prompt:\n{prompt_text[:200]}...")
