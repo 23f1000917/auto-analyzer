@@ -155,6 +155,7 @@ async def create_problem_instance(request: Request) -> Problem:
 
             else:
                 file_content = await upload_file.read()
+                os.makedirs("request_data", exist_ok=True) 
                 with open(f"request_data/{name}", "wb") as f:
                     f.write(file_content)
                 problem.file_dict[name] = file_content
