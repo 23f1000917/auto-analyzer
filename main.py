@@ -126,7 +126,7 @@ class Problem:
     def __init__(self) -> None:
         logger.info("Initializing new Problem instance")
         self.request_id: str = uuid.uuid4().hex[:8]
-        self.request_data_path = Path(f"request_data/{request_id}")
+        self.request_data_path = Path(f"request_data/{self.request_id}")
         self.request_data_path.mkdir(parents=True, exist_ok=True)
 
         # The properties suffixed with 'text' are to be used with LLM prompts
