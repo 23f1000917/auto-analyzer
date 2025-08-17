@@ -333,18 +333,17 @@ def run_question_script(script: str, p: Problem, qno: int, max_tries: int = 10) 
     logger.info(f"Running script for question {qno + 1} (max attempts: {max_tries})")
     logger.info(f"Question: {p.questions_list[qno]}")
     
+    dfs_copy = [df.copy(deep=True) for df in p.dfs]
+    
     for attempt in range(max_tries):
         try:
-            logger.info(f"Attempt {attempt + 1}/{max_tries} for question {qno + 1}")
-            # Create global scope with necessary modules and data
             global_scope = {
                 'pd': pd,
                 'np': np,
-                'dfs': p.dfs,
+                'dfs': dfs_copy,  # Use isolated copies
                 '__builtins__': builtins
             }
             local_scope = {}
-            print(script)
             exec(script, global_scope, local_scope)
             answer = local_scope.get("answer")
             logger.info(f"Successfully executed script on attempt {attempt + 1}")
