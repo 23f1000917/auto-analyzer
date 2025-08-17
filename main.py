@@ -539,6 +539,14 @@ def convert_to_serializable(obj):
         return str(obj)
 
 def create_answers_list_text(answers):
+    text = ""
+    for ans in answers:
+        ans = str(ans)
+        if len(ans) > 20:
+            ans = ans[:20] + "...(truncated)"
+        text += f" {ans}, # {str(type(ans))}\n"
+    return text
+        
     return ", ".join([
         f"{str(a)[:20]}{'...(truncated)' if len(str(convert_to_serializable(a))) > 20 else ''}"
         for a in answers
