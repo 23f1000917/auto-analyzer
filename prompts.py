@@ -95,14 +95,14 @@ Instructions:
     - Imports any needed modules.
     - Loads all DataFrames into a list called `files_dfs`.
 
-All the filepaths are of the form 'request_data/<filename>'
+All the filepaths are of the form 'request_data/{request_id}/<filename>'
 
 Example:
 ```python
 # example 
 files_dfs = [
-    pd.read_csv("request_data/file1.csv"),
-    pd.read_excel("request_data/file2.xlsx")
+    pd.read_csv("request_data/{request_id}/file1.csv"),
+    pd.read_excel("request_data/{request_id}/file2.xlsx")
 ]
 """
 
