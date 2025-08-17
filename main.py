@@ -473,6 +473,9 @@ def convert_to_serializable(obj):
     - Handles numpy types, datetime, base64 encoding for byte objects.
     - Uses `repr()` as a fallback for any non-serializable object.
     """
+    if isinstance(obj, str):
+        return obj
+
     if isinstance(obj, dict):
         # Recursively process all dict values
         return {key: convert_to_serializable(value) for key, value in obj.items()}
@@ -501,13 +504,8 @@ def convert_to_serializable(obj):
         # Handle bytes or bytearray by converting to base64
         return base64.b64encode(obj).decode('utf-8')  # Base64 encoding
     else:
-        # Fallback: Use repr for all other types that are not serializable by default
-        try:
-            # Check if repr can handle the object gracefully
-            return repr(obj)
-        except Exception as e:
-            # If repr fails, log the exception and return a generic message
-            return f"<unserializable object: {str(e)}>"
+        # Fallback: Use str() for all other types that are not serializable by default
+        return str(obj)
 
 def create_answers_list_text(answers):
     return ", ".join([
