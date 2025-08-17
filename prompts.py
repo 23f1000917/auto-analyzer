@@ -275,26 +275,32 @@ FIX_QUESTION_SCRIPT_SCHEMA = {
 
 
 OUTPUT_SCRIPT_TEMPLATE = """
-You will be given INPUTS related to a data analysis problem.
+You will be given the following inputs related to a data analysis problem:
+- Questions list
+- answers list with type hints using '#'
+- Output format instructions 
 
 Here are the inputs:
 
 QUESTIONS LIST:
 {questions_list_text}
 
-CALCULATED ANSWERS LIST:
-[{answers_list_text}]
-
+CALCULATED ANSWERS LIST WITH TYPE HINTS:
+```python
+[
+ {answers_list_text}
+]
+```
 OUTPUT FORMAT INSTRUCTIONS:
 {output_format_text}
 
 YOUR TASK 
 Write a python function 'create_output(answers: list)' that accepts the answers list 
-and returns the answers in the expected format (json serializable).
-Do not include anything else in your response. 
-ONLY RETURN THE FUNCTION DEFINITION, NO EXPLANATIONS, NO EXAMPLES NOTHING ELSE (CRITICAL)
-THE OUTPUT SHOULD BE JSON SERIALIZABLE (CRITICAL)
-THE ANSWERS MUST FOLLOW THE OUTPUT FORMAT INSTRUCTIONS (CRITICAL)
+and returns the answers in the expected format.
+
+EACH ANSWER MUST BE CONVERTED TO THE APPROPRIATE DATATYPE MENTIONED IN THE OUTPUT INSTRUCTIONS.
+ONLY RETURN THE FUNCTION DEFINITION, NO EXPLANATIONS, NO EXAMPLES NOTHING ELSE.
+THE OUTPUT MUST FOLLOW THE EXPECTED FORMAT AND SHOULD BE JSON SERIALIZABLE.
 """
 
 OUTPUT_SCRIPT_SCHEMA = {
