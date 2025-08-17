@@ -228,7 +228,6 @@ You will be four given inputs:
 
 Your task is to fix the script and return the fixed version.
 The `exec()` function will be used to run your script with no human invervention.
-You are allowed to install any packages you desire for the fix using `subprocess.run(["uv", "pip", "install", package_name], check=True)`.
 Only focus on fixing the provided script, do not do anything else.
 
 Here are the inputs:
@@ -251,6 +250,7 @@ PREVIOUSLY TRIED FIXES:
 {fix_history}
 
 CRITICAL INSTRUCTIONS:
+- IF THE ERROR IS DUE TO SOME PACKAGE NOT BEING INSTALLED, TRY TO SOLVE THE QUESTION WITHOUT IT USING ANY WELL KNOWN DATA SCIENCE RELATED PACKAGES.
 - BE CAREFUL, DO NOT USE ANY `TRY-EXCEPT` BLOCKS IN THE SCRIPTS.
 - DO NOT SOLVE ANY OTHER QUESTION EXCEPT '{question_string}'
 - STORE THE ANSWER TO THE QUESTION IN THE `answer` VARIABLE AT THE END OF THE SCRIPT.
