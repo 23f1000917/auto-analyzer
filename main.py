@@ -424,7 +424,6 @@ def ask_LLM(contents: list, response_schema: dict) -> Any:
                     "response_mime_type": "application/json",
                     "response_json_schema": response_schema
                 }
-            input(contents[0])
             response = client.models.generate_content(
                 model=model_name,
                 contents=contents, 
