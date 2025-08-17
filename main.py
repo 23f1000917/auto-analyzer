@@ -400,7 +400,7 @@ def generate_output(p: Problem, answers):
 
 def ask_LLM(contents: list, response_schema: dict) -> Any:
     models = [
-        # "gemini-2.5-pro",
+        "gemini-2.5-pro",
         "gemini-2.5-flash",
         "gemini-2.5-flash-lite",
         "gemini-2.0-flash"
