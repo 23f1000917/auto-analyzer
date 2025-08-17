@@ -157,7 +157,7 @@ async def create_problem_instance(request: Request) -> Problem:
                 file_content = await upload_file.read()
                 with open(f"request_data/{name}", "wb") as f:
                     f.write(file_content)
-                problem.file_dict[name] = BytesIO(await upload_file.read())
+                problem.file_dict[name] = file_content
                 logger.debug(f"Added file to file_dict: {name}")
 
         logger.info(f"Problem instance created with {len(problem.image_dict)} images and {len(problem.file_dict)} files")
