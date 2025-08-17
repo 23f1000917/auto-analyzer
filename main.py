@@ -6,10 +6,10 @@ import json
 import glob
 import base64
 import logging
-import datetime
 import traceback
 import numpy as np
 import pandas as pd 
+import builtins  # Added for execution environment
 from PIL import Image
 from io import BytesIO
 from typing import Any
@@ -93,11 +93,12 @@ async def analyze(request: Request):
 
         output = generate_output(problem, answers)
         logger.info(f"Successfully generated output in {(datetime.now() - start_time).total_seconds():.2f} seconds")
+        return output
 
     except Exception as e:
         logger.error(f"Error during analysis: {str(e)}")
         logger.error(traceback.format_exc())
-        raise
+        return {"error": "Analysis failed", "message": str(e)}
 
     finally:
         # Clean up request files
@@ -109,8 +110,6 @@ async def analyze(request: Request):
             except Exception as e:
                 logger.info(f"Failed to delete {f}: {e}")
             
-    return output
-
 # ------------------------------------------ Main Pipeline --------------------------------------------------
 
 class Problem:
@@ -225,8 +224,14 @@ def run_file_loading_script(script: str, files: dict, max_tries: int = 5) -> lis
     for attempt in range(max_tries):
         try:
             logger.info(f"Attempt {attempt + 1}/{max_tries} to run file loading script")
+            # Create global scope with necessary modules
+            global_scope = {
+                'pd': pd,
+                'np': np,
+                '__builtins__': builtins
+            }
             locals_dict = {}
-            exec(script, {}, locals_dict)
+            exec(script, global_scope, locals_dict)
             files_dfs = locals_dict.get("files_dfs", [])
             
             if isinstance(files_dfs, list):
@@ -331,9 +336,16 @@ def run_question_script(script: str, p: Problem, qno: int, max_tries: int = 10) 
     for attempt in range(max_tries):
         try:
             logger.info(f"Attempt {attempt + 1}/{max_tries} for question {qno + 1}")
+            # Create global scope with necessary modules and data
+            global_scope = {
+                'pd': pd,
+                'np': np,
+                'dfs': p.dfs,
+                '__builtins__': builtins
+            }
             local_scope = {}
             print(script)
-            exec(script, {"dfs": p.dfs}, local_scope)
+            exec(script, global_scope, local_scope)
             answer = local_scope.get("answer")
             logger.info(f"Successfully executed script on attempt {attempt + 1}")
             return answer
@@ -387,8 +399,14 @@ def generate_output(p: Problem, answers):
     logger.info(f"Output generation script:\n{script}")
 
     try:
+        # Create global scope with necessary modules
+        global_scope = {
+            'pd': pd,
+            'np': np,
+            '__builtins__': builtins
+        }
         local_ns = {}
-        exec(script, {}, local_ns)
+        exec(script, global_scope, local_ns)
         create_output_func = local_ns.get("create_output", lambda answers: answers)
         output = create_output_func(answers)
         logger.info(f"Generated output: {str(output)[:200]}")
