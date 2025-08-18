@@ -268,6 +268,7 @@ KEY INSTRUCTIONS:
 - THE 'find_answer' must be present and only return the answer to: '{question_string}'
 - Only include the function definition (as string) in your response.
 - [VERY IMPORTANT] Use only well known data science libraries like numpy, pandas, scipy, matplotlib, seaborn, sklearn etc.
+- If the error is due to missing packages, try to solve the question without using that package.
 """
 
 FIX_QUESTION_SCRIPT_SCHEMA = {
