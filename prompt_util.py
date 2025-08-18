@@ -287,7 +287,7 @@ ERROR TRACEBACK:
 {traceback_text}
 
 FAILED FIXES: 
-{fix_history}
+{fix_history_text}
 
 KEY INSTRUCTIONS:
 - Do not use any try-except blocks in the function definition
