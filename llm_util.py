@@ -17,13 +17,13 @@ MODELS = [
 # load secrets
 load_dotenv(".venv/secrets.env")
 
-API_KEYS = [os.environ.get(f"API_KEY_{i}") for i in range(2, 5)]
+API_KEYS = [os.environ.get(f"API_KEY_{i}") for i in range(1, 5)]
 
 async def ask_llm(contents: list, response_schema: dict):
     for model in MODELS:
         for kidx, api_key in enumerate(API_KEYS):
             try:
-                print(f"trying {model} with api_key_{kidx}")
+                print(f"trying {model} with api_key_{kidx+1}")
                 client = Client(api_key=api_key)
                 print("="*100)
                 print(contents[0])
@@ -42,7 +42,7 @@ async def ask_llm(contents: list, response_schema: dict):
                 return response_json
 
             except Exception as e:
-                print(f"failed {model} with api_key_{kidx}: {str(e)}")
+                print(f"failed {model} with api_key_{kidx+1}: {str(e)}")
                 continue
     raise Exception("all llm calls failed")
 
