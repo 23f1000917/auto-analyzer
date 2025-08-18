@@ -92,33 +92,52 @@ PROBLEM_METADATA_SCHEMA = {
 }
 
 FILE_LOADING_SCRIPT_TEMPLATE = """
-Examine the below data sources and identify the files that can be loaded from a filepath.
-Write a script that loads each file into one or more pandas dataframes and creates 'df_list'.
+You will be given information about various data sources. Your task is to identify which of them can be loaded from a file path, and write Python code to load them into pandas DataFrames.
 
 INPUT:
 {data_source_text}
 
-Instructions:
-- For each attached file, determine how to load it into **one or more** pandas DataFrames based on the file extension.
-- Supported formats: CSV, TSV, XLS/XLSX (multi-sheet), JSON, Parquet, and ZIP, PDF etc. (may contain multiple data files).
-- If a file contains **multiple tables** (e.g. multi-sheet Excel, multi-query SQL, or ZIP with multiple CSVs), include **all** tables as separate DataFrames in the final list.
-- Use `py-tabula` for extracting tables from PDFs (if required).
-- Return a single Python script that:
-    - Imports any needed modules.
-    - Loads all DataFrames into a list called `files_dfs`.
+INSTRUCTIONS:
 
-You can read each file from: 'request_data/{request_id}/<filename>'
+- For each attached file, determine the correct method to load it into one or more pandas DataFrames based on its file extension.
+- Supported formats include:
+  - CSV, TSV
+  - Excel files (.xls, .xlsx) — may contain multiple sheets
+  - JSON
+  - Parquet
+  - ZIP files — may contain multiple CSVs or other supported files
+  - PDF — use `tabula` (via `py-tabula`) to extract tables
 
-Example:
-```python
+- If a file contains multiple tables (e.g., multi-sheet Excel, ZIP with multiple CSVs), extract **all** tables and include them as separate DataFrames.
+
+- Use the file path pattern: `request_data/{request_id}/<filename>` when loading each file.
+
+YOUR TASK:
+
+Write a single Python script that:
+- Imports all required libraries
+- Loads all tables into a list named `files_dfs`
+- Appends one DataFrame per table into `files_dfs`
+
+✅ Example:
+\\```python
+import pandas as pd
+
 files_dfs = [
-    pd.read_csv("request_data/{request_id}/file1.csv"),
-    pd.read_excel("request_data/{request_id}/file2.xlsx")
+    pd.read_csv("request_data/{request_id}/data1.csv"),
+    pd.read_excel("request_data/{request_id}/data2.xlsx", sheet_name="Sheet1"),
+    pd.read_excel("request_data/{request_id}/data2.xlsx", sheet_name="Sheet2")
 ]
+\\```
 
-IMPORTANT POINTS
-Do not use any try-except blocks in the script.
+IMPORTANT RULES:
+
+- Do **not** use any try-except blocks in the script.
+- Return **only the final Python script**, with imports and construction of `files_dfs`.
+- No markdown, explanations, or comments — just raw executable code.
+
 """
+
 
 FILE_LOADING_SCRIPT_SCHEMA = {
     "type": "object",
@@ -198,9 +217,14 @@ WEBSCRAPE_URL_SCHEMA = {
 
 
 QUESTION_SCRIPTS_TEMPLATE = """
-You will be given an INPUT containing data sources and questions.
-For EACH question, write a python script with 'find_answer()' function that returns the answer.
+You will be given an INPUT containing:
+- Data sources
+- A list of questions
+
+Your task is to write a separate Python script for **each question**, implementing a `find_answer()` function that returns the answer.
+
 ---
+
 INPUT:
 {data_source_text}
 
@@ -208,13 +232,15 @@ INPUT:
 
 {dfs_text}
 
-KEY INSTRUCTIONS:
- - [VERY IMPORTANT] Use only common data science libraries like numpy, pandas, scipy, matplotlib, seaborn, sklearn etc.
- - Your response should include the scripts in the same order as the questions.
- - Do not use any try-except blocks in the script. 
- - answers that are base64 string MUST BE PREFIXED with 'data:image/<filetype>;base64,'
- - The function should always have the signature 'find_answer()'
- - Import the packages you require in the script.
+INSTRUCTIONS:
+
+- ⚠️ [VERY IMPORTANT] Use only standard data science libraries: `pandas`, `numpy`, `scipy`, `matplotlib`, `seaborn`, `sklearn`, etc.
+- The output must include one script per question, in the **same order** as the questions appear.
+- Do **not** use `try-except` blocks in any of the scripts.
+- For answers that are base64-encoded images, the return value **must** be prefixed with `'data:image/<filetype>;base64,'`.
+- Each script must define a function named exactly `find_answer()` that returns the answer.
+- All necessary packages must be explicitly imported in each script.
+- Your output must be **only the Python code**, no explanations, no comments, no markdown formatting.
 """
 
 QUESTION_SCRIPTS_SCHEMA = {
@@ -286,14 +312,19 @@ FIX_QUESTION_SCRIPT_SCHEMA = {
     }
 }
 
-
 OUTPUT_SCRIPT_TEMPLATE = """
-You will be given the following inputs related to a data analysis problem:
-- Questions list
-- Snippets of the calculated answers 
-- Output format instructions 
+You are given the following inputs related to a data analysis problem:
+- A list of questions
+- A list of corresponding calculated answers
+- A description of the expected output format
 
-Here are the inputs:
+Your task is to generate a Python script that defines the function:
+
+    def create_output(answers: list) -> Any
+
+This function should take the list of answers and return a structured output that conforms to the specified format.
+
+HERE ARE THE INPUTS:
 
 QUESTIONS LIST:
 {questions_list_text}
@@ -304,21 +335,28 @@ CALCULATED ANSWERS LIST:
 {answers_list_text}
 ]
 ```
+
 OUTPUT FORMAT INSTRUCTIONS:
 {output_format_text}
 
-YOUR TASK 
-Write a python script with 'create_output(answers: list)' function that accepts the answers list 
-and returns the answers in the expected format.
+YOUR TASK:
 
-YOU MUST DO THE FOLLOWING:
-- CLEARLY EXAMINE THE CALCULATED ANSWERS LIST.
-- CONVERT EACH ANSWER TO SPECIFIED DATATYPE IN THE OUTPUT FORMAT INSTRUCTIONS.
-- [VERY IMPORTANT] CREATE A VALID DUMMY ANSWER FOR THE QUESTIONS WHERE THE ANSWER IS None. 
-- MAKE THE DUMMY ANSWER FOR BASE64 STRINGS AS 'data:image/png;base64,iV...(truncated)
-- THE OUTPUT MUST FOLLOW THE EXPECTED FORMAT AND SHOULD BE JSON SERIALIZABLE.
-- ONLY RETURN THE SCRIPT WITH IMPORTS  OR 'create_output(answers:list)', NO EXPLANATIONS, NO EXAMPLES NOTHING ELSE.
+Implement the function `create_output(answers: list)` that transforms the raw answers into the required output structure.
+
+YOU MUST FOLLOW THESE RULES:
+
+- Carefully examine the CALCULATED ANSWERS LIST.
+- Convert each answer to the exact data type specified in the OUTPUT FORMAT INSTRUCTIONS.
+- For any question where the answer is `None`, generate a valid dummy answer:
+  - For base64-encoded image strings, use: 'data:image/png;base64,iV...(truncated)'
+  - For other types, use a plausible placeholder that matches the expected format.
+- Ensure the returned value is a valid native Python data structure (e.g., dict, list, etc.).
+- DO NOT use json.dumps() or any form of manual JSON serialization.
+- The output must be JSON-serializable (i.e., contain only data types that can be converted to JSON).
+- Only output the complete Python script containing necessary imports (if any) and the create_output function.
+- Do not include any explanations, comments, or example usages—only output the code.
 """
+
 
 OUTPUT_SCRIPT_SCHEMA = {
     "type": "object",
@@ -332,15 +370,17 @@ OUTPUT_SCRIPT_SCHEMA = {
 }
 
 FIX_OUTPUT_SCRIPT_TEMPLATE = """
-You will be given the following inputs related to a data analysis problem:
-- Questions list
-- Snippets of the calculated answers 
-- Output format instructions 
-- Script containing 'create_output(answers)' that is supposed to assemble the answers in the expected format
-- Error occured in the script
-- Previously tried fixes that did not work.
+You are given the following inputs related to a data analysis task:
+- A list of questions
+- A list of calculated answer snippets
+- Output format instructions
+- A Python script that defines 'create_output(answers)' but currently raises an error
+- The traceback of the error
+- A list of previously attempted (but unsuccessful) fixes
 
-Here are the inputs:
+Your task is to return a corrected version of the script such that it works as intended — assembling the output in the specified format without errors.
+
+HERE ARE THE INPUTS:
 
 QUESTIONS LIST:
 {questions_list_text}
@@ -351,17 +391,32 @@ CALCULATED ANSWERS LIST:
 {answers_list_text}
 ]
 ```
+
 OUTPUT FORMAT INSTRUCTIONS:
 {output_format_text}
 
-SCRIPT
+BROKEN SCRIPT:
+```python
 {script}
+```
 
-TRACEBACK 
+TRACEBACK:
+```plaintext
 {traceback_text}
+```
 
-Return the raw code snippet of the fixed script such that the output is properly assembled.
+YOUR TASK:
+
+- Carefully inspect the script and the traceback to identify and fix the issue.
+- Ensure that the corrected script produces the expected structure, using the provided answers list and respecting the output format instructions.
+- If any answer is `None`, generate a valid dummy placeholder:
+  - For base64-encoded images, use: `'data:image/png;base64,iV...(truncated)'`
+  - For other types, use appropriate dummy values.
+- The function must return a native Python data structure (e.g., dict, list) — **do not use `json.dumps()`** or other serializers.
+- The output must be valid and JSON-serializable.
+- Return only the **fixed script** as a raw code snippet — no explanations, comments, or additional text.
 """
+
 
 FIX_OUTPUT_SCRIPT_SCHEMA = {
     "type": "object",
@@ -380,17 +435,20 @@ FIX_OUTPUT_SCRIPT_SCHEMA = {
 
 
 DFS_TEXT_TEMPLATE = """
-Required data has been loaded as dataframes in 'dfs' list.
-You MUST access each df in your script using 'dfs[<table_index>]'.
+The required data has been loaded into a list of Pandas DataFrames named `dfs`.
+Each DataFrame must be accessed using its index: `dfs[<table_index>]`.
 
 DATA SNIPPETS:
 {all_snippets_text}
 
-DFs INSTRUCTIONS
-- DO NOT USE ANY OTHER WAY TO ACCESS DATA PRESENT IN SNIPPETS, ALWAYS USE 'dfs[<table_index>]'
-- [VERY IMPORTANT] Choose the SMALLEST SUBSET of elements from 'dfs' to find the answers to ALL of the questions.
-- Don't join or concatenate the individual dfs UNLESS required for the question.
-- [VERY IMPORTANT] PREPROCESS NUMERICAL COLUMNS USING REGEX
+INSTRUCTIONS FOR USING DATAFRAMES:
+
+- Access data **only** via `dfs[<table_index>]`. Do not reference or recreate data directly from the snippets.
+- ✅ Always select the **smallest possible subset** of DataFrames necessary to answer **all** the questions.
+- 🚫 Do **not** join, merge, or concatenate DataFrames **unless** it is explicitly required to answer a question.
+- 🧹 [VERY IMPORTANT] Clean and preprocess **numerical columns** using regular expressions if needed (e.g., remove symbols, convert types).
+
+Adhere strictly to these rules to ensure clean, efficient, and accurate analysis.
 """
 
 def create_questions_list_text(questions_list):
