@@ -439,7 +439,7 @@ def create_dfs_text(dfs) -> str:
     if not dfs:
         return ''
     
-    from backup.prompts import DFS_TEXT_TEMPLATE
+    from prompt_util import DFS_TEXT_TEMPLATE
 
     all_snippets_text = ""
     for i, df in enumerate(dfs):
