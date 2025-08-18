@@ -1,58 +1,68 @@
-PROBLEM_METADATA_TEMPLATE = """
-You will be given an INPUT containing a data analysis problem.
-You have to create metadata for the problem.
+PROBLEM_METADATA_TEMPLATE = """**INPUT ANALYSIS TASK**
+Extract metadata from the provided input with absolute precision. Do not add, infer, or modify any information.
 
-The problem will contain details about:
-1. ANALYSIS QUESTIONS
-2. DATA SOURCES & STRUCTURE
-3. OUTPUT SCHEMA & REQUIREMENTS 
-
-INPUT:
+**INPUT CONTENT**
 {questions_text}
 {attachments_text}
 
-Metadata Extraction Guidelines:
+**SECTION A: QUESTIONS EXTRACTION**
+1. Identify EVERY analytical question/problem
+2. PRESERVE EXACT wording from input
+3. For ambiguous questions, formulate CLEAR descriptions maintaining original intent
+4. Include ALL question-related text including calculation specifics
 
-A. QUESTIONS (CRITICAL):
-• Extract question strings from the inputs
-• Extract EVERY analytical question/problem
-• Preserve EXACT wording when unambiguous
-• Formulate clear descriptions when needed
-• In the question string, include any substring that seems like a part of the question itself or impacts the way the answer is calculated.
+**SECTION B: DATA SOURCES & STRUCTURE**
+1. Identify ALL data locations (DBs, APIs, files, URLs)
+2. Specify EXACT access methods (SQL queries, API endpoints, file paths)
+3. Extract STRUCTURAL DETAILS:
+   - File paths/patterns (use wildcards where specified)
+   - Data formats (CSV, Parquet, JSON, etc.)
+   - Schema details (tables, columns, data types)
+   - Sample data representations
+   - Partitioning/organization schemes
+4. Include credentials ONLY if explicitly provided in input
+5. If database query present:
+   - Explicitly state "Public dataset - no credentials required" if no credentials in input
+   - Include ALL credentials if present in input
 
-B. DATA SOURCES & STRUCTURE (CRITICAL):
-• Identify ALL data locations (DBs, APIs, files, URLs, Webpages)
-• Capture ACCESS METHODS (queries, endpoints, webscrape, api, direct file download etc.)
-• Extract STRUCTURAL DETAILS:
-  - File paths/patterns (include wildcards)
-  - Data formats (Parquet, CSV, JSON, etc.)
-  - Schema details (tables, columns, types)
-  - Sample data representations
-  - Partitioning/organization schemes
-• Include CREDENTIALS/REGIONS if specified
-• Include EVERY LITTLE DETAIL, LEAVE NOTHING
+**SECTION C: OUTPUT REQUIREMENTS**
+1. Extract EVERY formatting instruction
+2. Capture ALL precision/unit requirements
+3. Specify encoding requirements (base64, etc.)
+4. Note ALL constraints (length limits, file formats)
+5. Include output schemas or example outputs
+6. If no schema provided, create one based EXCLUSIVELY on input
 
-C. OUTPUT SCHEMA AND REQUIREMENTS (CRITICAL):
-• EVERY formatting instruction (tables, charts, etc.)
-• Precision/unit requirements
-• Encoding specifications (base64, etc.)
-• Constraints (length limits, file formats)
-• Output schemas or example outputs 
-• If output schema is not present, try to create one 
-• Include EVERY LITTLE DETAIL, LEAVE NOTHING
+**CRITICAL RULES**
+- COMBINE information from text and images WITHOUT ADDITION
+- REFERENCE files by exact name when mentioned
+- PRESERVE technical details verbatim
+- ALL input details MUST appear in output
+- DO NOT INFER missing information"""
 
-D. CONTEXT HANDLING (CRITICAL):
-• COMBINE information from text and images (if present)
-• REFERENCE files by name when mentioned
-• PRESERVE technical details exactly
-• FOR ANY DETAIL IN THE ORIGINAL INPUT, IT MUST BE PRESENT IN YOUR RESPONSE
+PROBLEM_METADATA_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "questions": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "description": "question string"
+            }
+        },
+        "data_source_text": {
+            "type": "string",
+            "description": "data sources and structure"
+        },
+        "output_format_text": {
+            "type": "string",
+            "description": "output schema and requirements"
+        }
+    },
+    "required": ["questions", "data_source_text", "output_format_text"],
+    "additionalProperties": False
+}
 
-E. CRITICAL INSTRUCTION
-If the data source is a database query, EXPLICITLY mention in the metadata that:
- - Dataset is public and does not require any credentials if no credentials are present
- - If credentials are present, include all that are required to query the database.
-
-"""
 PROBLEM_METADATA_SCHEMA = {
     "type": "object",
     "properties": {
@@ -130,7 +140,6 @@ ERROR TRACEBACK:
 {fix_history}
 
 Only fix the error causing parts of the script. Do not touch anything else.
-You can import any needed packages.
 
 {trial_instruction}
 """
@@ -185,86 +194,86 @@ WEBSCRAPE_URL_SCHEMA = {
 
 
 QUESTION_SCRIPTS_TEMPLATE = """
-You will be given a problem metadata containing data sources, questions and output instructions.
-Your task is to write per-question python scripts to find the answers.
-
-CRITICAL INSTRUCTIONS:
- - Send the scripts in order of the questions in the problem statement.
- - The `exec()` function will be used to run your scripts without any human intervention.
- - Do not use any try-except blocks in the scripts. 
- - At the end of each script, store the answer in `answer` variable.
- - THE 'answer' VALUE MUST BE JSON SERIALIZABLE
+You will be given an INPUT containing data sources and questions.
+For EACH question, write a SEPARATE python function that returns the answer to the question.
 ---
-PROBLEM STATEMENT:
-{metadata_text}
+INPUT:
+{data_source_text}
+
+{questions_list_text}
 
 {dfs_text}
 
-BE CAREFUL, DO NOT USE ANY `TRY-EXCEPT` BLOCKS IN THE SCRIPTS. (CRITICAL)
-BASE64 STRINGS MUST BE PREFIXED WITH 'data:image/<filetype>;base64,'
-ALL BASE64 STRING ANSWERS MUST BE OF THE FORM 'data:image/<filetype>;base64,<base64-encoded-data>'
+KEY INSTRUCTIONS:
+ - [VERY IMPORTANT] Use only well known data science libraries like numpy, pandas, scipy, matplotlib, seaborn, sklearn etc.
+ - Keep the order of items in your response the same as the question order.
+ - Do not use any try-except blocks in the function. 
+ - answers that are base64 string MUST BE PREFIXED with 'data:image/<filetype>;base64,'
+ - The function should always have the signature 'find_answer()'
+ - Only include the function definition in each item, do not include any examples etc.
 """
 
 QUESTION_SCRIPTS_SCHEMA = {
     "type": "object",
-    "required": ["scripts"],
+    "required": ["function_definitions"],
     "properties": {
-        "scripts": {
+        "function_definitions": {
             "type": "array",
+            "description": "array of python scripts containing 'find_answer' function",
             "items": {
                 "type": "string",
-                "description": "The python script to get the answer"
+                "description": "The python function definition for the target question"
             }
         }
     }
 }
 
 FIX_QUESTION_SCRIPT_TEMPLATE = """
-You will be four given inputs:
-1. Problem metadata containing questions, output instructions and data sources.
-2. The latest version of the python script to solve ONE OF the questions.
-3. A detailed traceback of what caused an error in the latest script.
-4. Short description of previously tried fixes for all the versions of the script.
+You will be given the following inputs:
+1. Problem metadata containing data sources and questions.
+2. A TARGET QUESTION from the questions list.
+2. 'find_answer' function for the TARGET QUESTION.
+3. A detailed error traceback.
+4. Short description of failed fixes that did not work.
 
-Your task is to fix the script and return the fixed version.
-The `exec()` function will be used to run your script with no human invervention.
-Only focus on fixing the provided script, do not do anything else.
+Your task is to fix the function based on what it is *trying* to do.
+Do not many any other changes.
 
 Here are the inputs:
 
-PROBLEM STATEMENT:
-{metadata_text}
+PROBLEM METADATA:
+{data_source_text}
+
+{questions_list_text}
 
 {dfs_text}
 
 TARGET QUESTION
 {question_string}
 
-ERROR CAUSING SCRIPT:
+FAILED FUNCTION DEFINITION:
 {script}
 
 ERROR TRACEBACK:
 {traceback}
 
-PREVIOUSLY TRIED FIXES: 
+FAILED FIXES: 
 {fix_history}
 
-CRITICAL INSTRUCTIONS:
-- IF THE ERROR IS DUE TO SOME PACKAGE NOT BEING INSTALLED, TRY TO SOLVE THE QUESTION WITHOUT IT USING ANY WELL KNOWN DATA SCIENCE RELATED PACKAGES.
-- BE CAREFUL, DO NOT USE ANY `TRY-EXCEPT` BLOCKS IN THE SCRIPTS.
-- DO NOT SOLVE ANY OTHER QUESTION EXCEPT '{question_string}'
-- STORE THE ANSWER TO THE QUESTION IN THE `answer` VARIABLE AT THE END OF THE SCRIPT.
-- THE 'answer' VALUE MUST BE JSON SERIALIZABLE
-- DO NOT PRINT ANYTHING IN THE SCRIPT
+KEY INSTRUCTIONS:
+- Do not use any try-except blocks in the function definition
+- THE 'find_answer' must be present and only return the answer to: '{question_string}'
+- Only include the function definition (as string) in your response.
+- [VERY IMPORTANT] Use only well known data science libraries like numpy, pandas, scipy, matplotlib, seaborn, sklearn etc.
 """
 
 FIX_QUESTION_SCRIPT_SCHEMA = {
     "type": "object",
-    "required": ["fixed_script", "fix_description"],
+    "required": ["fixed_function", "fix_description"],
     "properties": {
-        "fixed_script": {
+        "fixed_function": {
             "type": "string",
-            "description": "the fixed python script"
+            "description": "the fixed function definition"
         },
         "fix_description": {
             "type": "string",
@@ -285,7 +294,7 @@ Here are the inputs:
 QUESTIONS LIST:
 {questions_list_text}
 
-CALCULATED ANSWERS LIST WITH TYPE HINTS:
+CALCULATED ANSWERS LIST:
 ```python
 [
  {answers_list_text}
@@ -319,16 +328,14 @@ OUTPUT_SCRIPT_SCHEMA = {
 
 
 DFS_TEXT_TEMPLATE = """
-Some of the data required for the questions has already been sourced.
-The datasets are stored as pandas dataframes inside the list named 'dfs'.
-You can access each df in your script using 'dfs[<table_index>]'.
+Required data has been loaded as dataframes in 'dfs' list.
+You MUST access each df in your script using 'dfs[<table_index>]'.
 
-Here are small snippets for each dataframe:
-
+DATA SNIPPETS:
 {all_snippets_text}
 
-CRITICAL INSTRUCTIONS
+DFs INSTRUCTIONS
+- DO NOT USE ANY OTHER WAY TO ACCESS DATA PRESENT IN SNIPPETS, ALWAYS USE 'dfs[<table_index>]'
 - Choose the SMALLEST SUBSET of elements from 'dfs' to find the answers to ALL of the questions.
 - Don't join or concatenate the individual dfs UNLESS required for the question.
-- Don't use `errors='coerce'` in the script, use regex to do the preprocessing for the data.
 """
