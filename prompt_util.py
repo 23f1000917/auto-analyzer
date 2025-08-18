@@ -120,7 +120,7 @@ Write a single Python script that:
 - Appends one DataFrame per table into `files_dfs`
 
 ✅ Example:
-\\```python
+```python
 import pandas as pd
 
 files_dfs = [
@@ -128,7 +128,7 @@ files_dfs = [
     pd.read_excel("request_data/{request_id}/data2.xlsx", sheet_name="Sheet1"),
     pd.read_excel("request_data/{request_id}/data2.xlsx", sheet_name="Sheet2")
 ]
-\\```
+```
 
 IMPORTANT RULES:
 
@@ -284,7 +284,7 @@ FAILED FUNCTION DEFINITION:
 {script}
 
 ERROR TRACEBACK:
-{traceback}
+{traceback_text}
 
 FAILED FIXES: 
 {fix_history}
