@@ -1,11 +1,13 @@
 import re 
 import traceback
 
-PROBLEM_METADATA_TEMPLATE = """**INPUT ANALYSIS TASK**
+PROBLEM_METADATA_TEMPLATE = """
+**INPUT ANALYSIS TASK**
 Extract metadata from the provided input with absolute precision. Do not add, infer, or modify any information.
 
 **INPUT CONTENT**
 {questions_text}
+
 {attachments_text}
 
 **SECTION A: QUESTIONS EXTRACTION**
@@ -36,7 +38,7 @@ Extract metadata from the provided input with absolute precision. Do not add, in
 5. Include output schemas or example outputs
 6. If no schema provided, create one based EXCLUSIVELY on input
 
-**CRITICAL RULES**
+**RULES YOU MUST FOLLOW**
 - COMBINE information from text and images WITHOUT ADDITION
 - REFERENCE files by exact name when mentioned
 - PRESERVE technical details verbatim
@@ -175,8 +177,6 @@ Identify the URL of the webpage that needs to scraped else return null.
 KEY INSTRUCTIONS:
 - Check if it mentions **web scraping**; if not, make the URL null.
 - Otherwise return the url for the webpage that needs to be scraped.
-
-CRITICAL INSTRUCTIONS:
 - The URL MUST NOT be related to a database connection, direct file download, or API endpoint.
 - It MUST point to a WEBPAGE that needs to be scraped.
 - The URL must be a valid webpage URL.
