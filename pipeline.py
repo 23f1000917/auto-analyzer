@@ -104,7 +104,7 @@ async def load_files_as_dfs(p: Problem) -> list[pd.DataFrame]:
 
 
 
-async def run_file_loading_script(script, max_tries = 1) -> list[pd.DataFrame]:
+async def run_file_loading_script(script, max_tries = 4) -> list[pd.DataFrame]:
     from prompt_util import FIX_FILE_LOADING_TEMPLATE, FIX_FILE_LOADING_SCHEMA
 
     fix_history = []
@@ -192,7 +192,7 @@ async def find_question_answers(p: Problem) -> list:
 
 
 
-async def run_question_script(script: str, qno: int, p, max_tries: int = 1):
+async def run_question_script(script: str, qno: int, p, max_tries: int = 4):
     from prompt_util import FIX_QUESTION_SCRIPT_TEMPLATE, FIX_QUESTION_SCRIPT_SCHEMA
 
     fix_history = []
@@ -235,7 +235,7 @@ async def run_question_script(script: str, qno: int, p, max_tries: int = 1):
             
 
 
-async def generate_output(p: Problem, max_tries=2):
+async def generate_output(p: Problem, max_tries=4):
     from prompt_util import OUTPUT_SCRIPT_TEMPLATE, OUTPUT_SCRIPT_SCHEMA
 
     fix_history = []
