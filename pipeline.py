@@ -62,13 +62,11 @@ async def create_problem_instance(request: Request) -> Problem:
             p.filenames.append(name)
     if not found_questions:
         raise ValueError("No 'questions.txt' file found in the request.")
-    print(f"""
-    {"=" * 100}
-    Problem Instance Created:
-    questions_text: {p.questions_text[:30]}...
-    attached_files: {p.filenames if p.filenames else None}
-    images: {len(p.images)}
-    """)
+    print(f"{'=' * 100}\n"
+          f"Problem Instance Created:\n"
+          f"questions_text: {p.questions_text[:30]}...\n"
+          f"attached_files: {p.filenames if p.filenames else None}\n"
+          f"images: {len(p.images)}")
     return p
 
 
@@ -82,11 +80,9 @@ async def generate_problem_metadata(p: Problem) -> dict:
         attachments_text = attachments_text
     )
     response_json = await ask_llm(contents = [prompt_text] + p.images, response_schema = PROBLEM_METADATA_SCHEMA)
-    print(f"""
-    {"=" * 100}
-    Problem Metadata Generated:
-    {create_metadata_text(response_json)}
-    """)
+    print(f"{'=' * 100}\n"
+      f"Problem Metadata Generated:\n"
+      f"{create_metadata_text(response_json)}")
     return response_json
 
 
@@ -111,10 +107,8 @@ async def load_files_as_dfs(p: Problem) -> list[pd.DataFrame]:
     
     files_dfs = await run_file_loading_script(script)
     valid_dfs = [df for df in files_dfs if isinstance(df, pd.DataFrame) and not df.empty]
-    print(f"""
-    {"=" * 100}
-    {len(p.filenames)} attached files loaded as {len(valid_dfs)} dataframes.
-    """)
+    print(f"{'=' * 100}\n"
+          f"{len(p.filenames)} attached files loaded as {len(valid_dfs)} dataframes.")
     return valid_dfs
 
 
@@ -133,11 +127,11 @@ async def run_file_loading_script(script, max_tries = 4) -> list[pd.DataFrame]:
             if isinstance(files_dfs, list):
                 return files_dfs
             else:
-                print(f"""
-                {"=" * 100}
-                Final File Loading Script:
-                {script}
-                """)
+                print(
+                    f"{'=' * 100}\n"
+                    f"Final File Loading Script:\n"
+                    f"{script}"
+                )
                 return []
 
         except Exception as e:
@@ -183,10 +177,10 @@ async def webscrape_tables_if_needed(p: Problem) -> list[pd.DataFrame]:
 
         valid_tables = [table for table in scraped_tables if not table.empty and 
             any(not str(col).startswith("Unnamed") and not isinstance(col, int) for col in table.columns)]  
-        print(f"""
-        {"=" * 100}
-        {len(valid_tables)} tables from {URL} loaded as {len(valid_tables)} dataframes.
-        """)
+        print(
+            f"{'=' * 100}\n"
+            f"{len(valid_tables)} tables from {URL} loaded as {len(valid_tables)} dataframes.\n"
+        )
         return valid_tables
     
     except ValueError as e:
@@ -238,11 +232,11 @@ async def run_question_script(script: str, question_string: str, p: Problem, max
                 answer = env["find_answer"](p.dfs)
             else:
                 answer = env["find_answer"]()
-            print(f"""
-            {"=" * 100}
-            Final Script For '{question_string}':
-            {script}
-            """)
+            print(
+                f"{'=' * 100}\n"
+                f"Final Script For '{question_string}':\n"
+                f"{script}"
+            )
             return answer
         
         except Exception as e:        
@@ -286,11 +280,11 @@ async def generate_output(p: Problem, max_tries=4):
             env = {'__builtins__': builtins}
             exec(script, env)
             output = env["create_output"](p.answers) # type: ignore
-            print(f"""
-            {"=" * 100}
-            Final Output Generation Script:
-            {script}
-            """)
+            print(
+                f"{'=' * 100}\n"
+                f"Final Output Generation Script:\n"
+                f"{script}"
+            )
             return output
         except Exception as e:
             if attempt < max_tries - 1:
