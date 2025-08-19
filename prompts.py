@@ -172,8 +172,6 @@ INPUT:
 {_describe_dfs(dfs)}
 
 INSTRUCTIONS:
-
-- ⚠️ [VERY IMPORTANT] Use only `pandas`, `numpy`, `scipy`, `matplotlib`, `seaborn`, and `sklearn`.
 - The output must include one script per question, in the same order as the questions appear.
 - Do NOT use `try-except` blocks in any of the scripts.
 - Each script must define a function named exactly `find_answer({find_answer_args})` that returns the direct answer to the question.
@@ -222,7 +220,9 @@ PREVIOUSLY TRIED FIXES:
 {"\n".join(f"- {fix}" for fix in tried_fixes)}
 
 
-⚠️ [VERY IMPORTANT] Use only `pandas`, `numpy`, `scipy`, `matplotlib`, `seaborn`, and `sklearn`.
+⚠️ [VERY IMPORTANT] If the traceback suggests that the error is due to some package not being install, then it is NOT ALLOWED to install. 
+Find a different solution that DOES NOT USE the missing package.
+Packages that are definitely installed: `pandas`, `numpy`, `scipy`, `matplotlib`, `seaborn`, and `sklearn`. This list is not exhaustive.
     """.strip()
 
 
@@ -398,6 +398,7 @@ def _describe_answers(
         result.append(f"...and {len(answers) - max_items} more items not shown.")
 
     return "\n".join(result)
+
 
 
 
