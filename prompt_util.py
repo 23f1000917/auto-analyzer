@@ -214,7 +214,6 @@ INSTRUCTIONS:
 - ⚠️ [VERY IMPORTANT] Use only `pandas`, `numpy`, `scipy`, `matplotlib`, `seaborn`, `sklearn`.
 - The output must include one script per question, in the **same order** as the questions appear.
 - Do **not** use `try-except` blocks in any of the scripts.
-- For answers that are base64-encoded images, the return value **must** be prefixed with `'data:image/<filetype>;base64,'`.
 - Each script must define a function named exactly `find_answer({find_answer_args})` that returns the answer.
 - All necessary packages must be explicitly imported in each script.
 - Your output must be **only the Python code**, no explanations, no comments, no markdown formatting.
@@ -322,11 +321,15 @@ Implement the function `create_output(answers: list)` that transforms the raw an
 YOU MUST FOLLOW THESE RULES:
 
 - Carefully examine the CALCULATED ANSWERS LIST.
+
 - Convert each answer to the exact data type specified in the OUTPUT FORMAT INSTRUCTIONS.
+
 - For any question where the answer is `None`, generate a valid dummy answer:
-  - For base64-encoded image strings, use: 'data:image/png;base64,iV...(truncated)'
+  - For base64-encoded image strings, use: 'dummy_base64_string'
   - For other types, use a plausible placeholder that matches the expected format.
+  
 - Ensure the returned value is a valid native Python data structure (e.g., dict, list, etc.).
+- Ensure that the base64 strings ARE NOT PREFIXED by `data:image/<filetype>;base64,`, remove them if they are.
 - DO NOT use json.dumps() or any form of manual JSON serialization.
 - The output must be JSON-serializable (i.e., contain only data types that can be converted to JSON).
 - Only output the complete Python script containing necessary imports (if any) and the create_output function.
