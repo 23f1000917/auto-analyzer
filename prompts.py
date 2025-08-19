@@ -80,7 +80,7 @@ FOR EACH FILE:
 
 OTHER REQUIREMENTS:
 
-- Use the file path: `request_data/{problem_dir}/<filename>` for all file loads
+- Use the file path: `{problem_dir}/<filename>` for all file loads
 - Do **not** use try-except blocks
 - Return **only** the final Python script with necessary imports and the `files_dfs` list fully constructed
 - The script should be executable and handle all files given
@@ -91,9 +91,9 @@ EXAMPLE:
 import pandas as pd
 
 files_dfs = [
-    pd.read_csv("request_data/{problem_dir}/data1.csv"),
-    pd.read_excel("request_data/{problem_dir}/data2.xlsx", sheet_name="Sheet1"),
-    pd.read_excel("request_data/{problem_dir}/data2.xlsx", sheet_name="Sheet2")
+    pd.read_csv("{problem_dir}/data1.csv"),
+    pd.read_excel("{problem_dir}/data2.xlsx", sheet_name="Sheet1"),
+    pd.read_excel("{problem_dir}/data2.xlsx", sheet_name="Sheet2")
 ]
 ```
 Note: Your output will be executed via Python's exec() function. Return only a complete, valid Python script containing all imports and the construction of `files_dfs`. Do not include any explanations, comments, or markdown formatting.
@@ -395,3 +395,4 @@ def _describe_answers(
         result.append(f"...and {len(answers) - max_items} more items not shown.")
 
     return "\n".join(result)
+
