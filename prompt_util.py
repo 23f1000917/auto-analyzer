@@ -68,29 +68,6 @@ PROBLEM_METADATA_SCHEMA = {
     "additionalProperties": False
 }
 
-PROBLEM_METADATA_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "questions": {
-            "type": "array",
-            "items": {
-                "type": "string",
-                "description": "question string"
-            }
-        },
-        "data_source_text": {
-            "type": "string",
-            "description": "data sources and structure"
-        },
-        "output_format_text": {
-            "type": "string",
-            "description": "output schema and requirements"
-        }
-    },
-    "required": ["questions", "data_source_text", "output_format_text"],
-    "additionalProperties": False
-}
-
 FILE_LOADING_SCRIPT_TEMPLATE = """
 You will be given information about various data sources. Your task is to identify which of them can be loaded from a file path, and write Python code to load them into pandas DataFrames.
 
@@ -221,7 +198,7 @@ You will be given an INPUT containing:
 - Data sources
 - A list of questions
 
-Your task is to write a separate Python script for **each question**, implementing a `find_answer()` function that returns the answer.
+Your task is to write a separate Python script for **each question**, implementing a `find_answer({find_answer_args})` function that returns the answer.
 
 ---
 
@@ -234,11 +211,11 @@ INPUT:
 
 INSTRUCTIONS:
 
-- ⚠️ [VERY IMPORTANT] Use only standard data science libraries: `pandas`, `numpy`, `scipy`, `matplotlib`, `seaborn`, `sklearn`, etc.
+- ⚠️ [VERY IMPORTANT] Use only `pandas`, `numpy`, `scipy`, `matplotlib`, `seaborn`, `sklearn` UNLESS it is absolutely required to use another.
 - The output must include one script per question, in the **same order** as the questions appear.
 - Do **not** use `try-except` blocks in any of the scripts.
 - For answers that are base64-encoded images, the return value **must** be prefixed with `'data:image/<filetype>;base64,'`.
-- Each script must define a function named exactly `find_answer()` that returns the answer.
+- Each script must define a function named exactly `find_answer({find_answer_args})` that returns the answer.
 - All necessary packages must be explicitly imported in each script.
 - Your output must be **only the Python code**, no explanations, no comments, no markdown formatting.
 """
@@ -251,7 +228,7 @@ QUESTION_SCRIPTS_SCHEMA = {
             "type": "array",
             "items": {
                 "type": "string",
-                "description": "script containing the 'find_answer()' function"
+                "description": "script containing the 'find_answer' function"
             }
         }
     }
@@ -261,12 +238,9 @@ FIX_QUESTION_SCRIPT_TEMPLATE = """
 You will be given the following inputs:
 1. Problem metadata containing data sources and questions.
 2. A TARGET QUESTION from the questions list.
-2. 'find_answer' function for the TARGET QUESTION.
+2. Script containing 'find_answer' function for the TARGET QUESTION.
 3. A detailed error traceback.
 4. Short description of failed fixes that did not work.
-
-Your task is to fix the function based on what it is *trying* to do.
-Do not many any other changes.
 
 Here are the inputs:
 
@@ -280,11 +254,15 @@ PROBLEM METADATA:
 TARGET QUESTION
 {question_string}
 
-FAILED FUNCTION DEFINITION:
+BROKEN SCRIPT:
+```python
 {script}
+```
 
 ERROR TRACEBACK:
+```plaintext
 {traceback_text}
+```
 
 FAILED FIXES: 
 {fix_history_text}
@@ -292,16 +270,14 @@ FAILED FIXES:
 KEY INSTRUCTIONS:
 - Do not use any try-except blocks in the function definition
 - THE 'find_answer' must be present and only return the answer to: '{question_string}'
-- Only include the function definition (as string) in your response.
-- [VERY IMPORTANT] Use only well known data science libraries like numpy, pandas, scipy, matplotlib, seaborn, sklearn etc.
-- If the error is due to missing packages, try to solve the question without using that package.
+- If the error is due to missing packages, solve the question using ONLY `pandas`, `numpy`, `scipy`, `matplotlib`, `seaborn`, `sklearn` .
 """
 
 FIX_QUESTION_SCRIPT_SCHEMA = {
     "type": "object",
     "required": ["fixed_function", "fix_description"],
     "properties": {
-        "fixed_function": {
+        "fixed_script": {
             "type": "string",
             "description": "the fixed function definition"
         },
@@ -424,7 +400,7 @@ FIX_OUTPUT_SCRIPT_SCHEMA = {
     "properties": {
         "fixed_script": {
             "type": "string",
-            "description": "python script containing the fixed create_output(answers: list)"
+            "description": "python script containing create_output(answers: list)"
         }, 
         "fix_description": {
             "type": "string",
@@ -496,10 +472,8 @@ def create_traceback_text(e):
 
 def create_dfs_text(dfs) -> str:
     if not dfs:
-        return ''
-    
-    from prompt_util import DFS_TEXT_TEMPLATE
-
+        return ""
+       
     all_snippets_text = ""
     for i, df in enumerate(dfs):
         # truncate cell values 
