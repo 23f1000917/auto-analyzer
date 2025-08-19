@@ -1,13 +1,11 @@
-# Use the full official Python 3.13.4 image (larger but more compatible)
 FROM python:3.13.4
 
 WORKDIR /app
 
-# Copy and install dependencies
 COPY requirements.txt .
+
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy your app code
 COPY . .
 
 EXPOSE 10000
