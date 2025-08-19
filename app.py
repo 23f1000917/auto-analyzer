@@ -1,50 +1,51 @@
-from dotenv import load_dotenv
+import shutil
+import traceback
 from fastapi import FastAPI, Request
 
-from pipeline import *
-from prompt_util import *
+from core import (
+    create_problem_instance,
+    generate_problem_metadata,
+    load_files_as_dfs,
+    webscrape_tables_if_needed,
+    find_answers_to_questions,
+    generate_output,
+)
 
-import shutil
 
-# initialize app
 app = FastAPI()
+
+
+@app.get("/")
+def index():
+    return {"message": "send a POST request with 'questions.txt'"}
+
 
 @app.post("/analyze")
 async def analyze(request: Request):
-
     try:
-        p = await create_problem_instance(request)  
-                
-        p.metadata_dict = await generate_problem_metadata(p) 
-        p.metadata_text = create_metadata_text(p.metadata_dict)
+        p = await create_problem_instance(request)
 
-        p.questions_list = p.metadata_dict.get("questions", [])
-        p.questions_list_text = create_questions_list_text(p.questions_list)
-
-        if not p.questions_list:
-            raise ValueError("No questions found.")
-        
-        p.data_source_text = p.metadata_dict.get("data_source_text", "")
-        p.output_format_text = p.metadata_dict.get("output_format_text", "")
+        metadata = await generate_problem_metadata(p)
+        p.questions = metadata["questions"]
+        p.data_source_desc = metadata["data_source_desc"]
+        p.output_format_desc = metadata["output_format_desc"]
 
         files_dfs = await load_files_as_dfs(p)
-
         scraped_dfs = await webscrape_tables_if_needed(p)
 
         p.dfs = files_dfs + scraped_dfs
-        p.dfs_text = create_dfs_text(p.dfs)
 
-        # find the answers to the questions
-        p.answers = await find_question_answers(p)
+        p.answers = await find_answers_to_questions(p)
 
         output = await generate_output(p)
-        try: shutil.rmtree(p.request_data_path)
-        except: pass
-        return output
+        try:
+            shutil.rmtree(p.dir)
+        finally:
+            return output
 
     except Exception as e:
-        try: shutil.rmtree(p.request_data_path)
-        except: pass
-        print(create_traceback_text(e))
-        return {"error": "Analysis failed", "message": str(e)}
-            
+        traceback.print_exception(type(e), e, e.__traceback__)
+        try:
+            shutil.rmtree(p.dir)
+        finally:
+            return {"error": "Analysis failed", "message": str(e)}
