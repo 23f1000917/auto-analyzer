@@ -220,6 +220,9 @@ TRACEBACK:
 
 PREVIOUSLY TRIED FIXES:
 {"\n".join(f"- {fix}" for fix in tried_fixes)}
+
+
+⚠️ [VERY IMPORTANT] Use only `pandas`, `numpy`, `scipy`, `matplotlib`, `seaborn`, and `sklearn`.
     """.strip()
 
 
@@ -395,4 +398,5 @@ def _describe_answers(
         result.append(f"...and {len(answers) - max_items} more items not shown.")
 
     return "\n".join(result)
+
 
