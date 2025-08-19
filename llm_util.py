@@ -22,8 +22,9 @@ API_KEYS = [os.environ.get(f"API_KEY_{i}") for i in range(1, 5)]
 async def ask_llm(contents: list, response_schema: dict):
     for model in MODELS:
         for kidx, api_key in enumerate(API_KEYS):
+            print("="*100)
             try:
-                print(f"trying {model} with api_key_{kidx+1}")
+                print(f"[ASK LLM] {model} | API_KEY_{kidx+1}")
                 client = Client(api_key=api_key)
                 response = await asyncio.wait_for(
                     client.aio.models.generate_content(
@@ -35,12 +36,13 @@ async def ask_llm(contents: list, response_schema: dict):
                 )
                 if not response.text:
                     raise ValueError("LLM response has no text")
-
+    
                 response_json = json.loads(response.text)
+                print(f"[ASK LLM] {model} | API_KEY_{kidx+1}: SUCCESS")
                 return response_json
 
             except Exception as e:
-                print(f"failed {model} with api_key_{kidx+1}: {str(e)}")
+                print(f"[ASK LLM] {model} | API_KEY_{kidx+1}: {str(e)}")
                 continue
     raise Exception("all llm calls failed")
 
