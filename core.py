@@ -29,7 +29,7 @@ class Problem:
         self.images = []
         self.filenames = []
 
-        self.questions: list[str] = []
+        self.questions = []
         self.data_source_desc = ""
         self.output_format_desc = ""
 
@@ -337,7 +337,7 @@ def _make_package_installations(packages: list[str]) -> None:
             print(f"⬇️ Installing package '{package}' using uv...")
             try:
                 subprocess.run(
-                    ["uv", "pip", "install", package],
+                    ["uv", "pip", "install", "--system", package],
                     check=True,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
@@ -350,3 +350,4 @@ def _make_package_installations(packages: list[str]) -> None:
             except Exception as e:
                 print(f"❌ Unexpected error while installing '{package}': {e}")
                 traceback.print_exception(type(e), e, e.__traceback__)
+
