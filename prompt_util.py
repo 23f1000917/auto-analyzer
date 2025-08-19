@@ -211,7 +211,7 @@ INPUT:
 
 INSTRUCTIONS:
 
-- ⚠️ [VERY IMPORTANT] Use only `pandas`, `numpy`, `scipy`, `matplotlib`, `seaborn`, `sklearn` UNLESS it is absolutely required to use another.
+- ⚠️ [VERY IMPORTANT] Use only `pandas`, `numpy`, `scipy`, `matplotlib`, `seaborn`, `sklearn`.
 - The output must include one script per question, in the **same order** as the questions appear.
 - Do **not** use `try-except` blocks in any of the scripts.
 - For answers that are base64-encoded images, the return value **must** be prefixed with `'data:image/<filetype>;base64,'`.
@@ -275,7 +275,7 @@ KEY INSTRUCTIONS:
 
 FIX_QUESTION_SCRIPT_SCHEMA = {
     "type": "object",
-    "required": ["fixed_function", "fix_description"],
+    "required": ["fixed_script", "fix_description"],
     "properties": {
         "fixed_script": {
             "type": "string",
