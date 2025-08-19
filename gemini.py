@@ -43,8 +43,6 @@ async def ask_gemini(contents: list, response_json_schema: dict):
 
             except Exception as e:
                 print(f"[FAILED] {model} with api_key_{kidx}: {str(e)}")
-                print("FAILED RESPONSE TEXT: ")
-                print(response.text)
                 continue
     raise Exception("gemini failed to respond")
 
@@ -71,3 +69,4 @@ def _get_config(model, response_json_schema):
             response_json_schema=response_json_schema,
         )
     return config
+
