@@ -67,7 +67,7 @@ SUPPORTED FILE TYPES AND HOW TO LOAD:
 - JSON: `pd.read_json()`
 - Parquet: `pd.read_parquet()`
 - ZIP: extract all files, load all supported files inside
-- PDF: use `tabula.read_pdf(..., pages='all', multiple_tables=True)`
+- PDF: extract tables using `pdfplumber`
 - SQLite database (.sqlite, .db): use `sqlite3` or `sqlalchemy` to list all tables and load each via `pd.read_sql_query()`
 - HDF5 (.h5): use `pd.read_hdf()`, load all keys as separate DataFrames
 - Other common formats you can handle: include appropriate code to load them as pandas DataFrames if possible
@@ -398,5 +398,6 @@ def _describe_answers(
         result.append(f"...and {len(answers) - max_items} more items not shown.")
 
     return "\n".join(result)
+
 
 
