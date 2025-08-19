@@ -175,7 +175,8 @@ async def find_question_answers(p: Problem) -> list:
     prompt_text = QUESTION_SCRIPTS_TEMPLATE.format(
         data_source_text = p.data_source_text,
         questions_list_text = p.questions_list_text, 
-        dfs_text = p.dfs_text
+        dfs_text = p.dfs_text,
+        find_answer_args = "dfs=None" if len(p.dfs) > 0 else ""
     )
     response_json = await ask_llm(
         contents=[prompt_text],
@@ -197,18 +198,19 @@ async def run_question_script(script: str, qno: int, p, max_tries: int = 4):
 
     fix_history = []
         
-    dfs_copy = [df.copy(deep=True) for df in p.dfs]
-    
     for attempt in range(max_tries):
         try:
-            env = {'dfs': dfs_copy, '__builtins__': builtins}
+            env = {'__builtins__': builtins}
 
             exec(script, env)
 
             if "find_answer" not in env:
                 raise NameError("The function 'find_answer' is not defined in the script.")
-                
-            answer = env["find_answer"]() 
+
+            if len(p.dfs) > 0:
+                answer = env["find_answer"](p.dfs)
+            else:
+                answer = env["find_answer"]()
             return answer
         
         except Exception as e:        
@@ -268,7 +270,9 @@ async def generate_output(p: Problem, max_tries=4):
                     contents = [prompt_text],
                     response_schema = FIX_OUTPUT_SCRIPT_SCHEMA,
                 )
-                script = response.get("fixed_script", "")
+                script = response.get("fixed_script")
+                if not script:
+                    raise Exception("fixed script not found")
                 fix_description = response.get("fix_description", "").strip()
                 
                 fix_history.append(f"Attempt {attempt + 1}: {fix_description}")
