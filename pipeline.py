@@ -62,6 +62,13 @@ async def create_problem_instance(request: Request) -> Problem:
             p.filenames.append(name)
     if not found_questions:
         raise ValueError("No 'questions.txt' file found in the request.")
+    print(f"""
+    {"=" * 100}
+    Problem Instance Created:
+    questions_text: {p.questions_text[:30]}...
+    attached_files: {p.filenames if p.filenames else None}
+    images: {len(p.images)}
+    """)
     return p
 
 
@@ -75,6 +82,11 @@ async def generate_problem_metadata(p: Problem) -> dict:
         attachments_text = attachments_text
     )
     response_json = await ask_llm(contents = [prompt_text] + p.images, response_schema = PROBLEM_METADATA_SCHEMA)
+    print(f"""
+    {"=" * 100}
+    Problem Metadata Generated:
+    {create_metadata_text(response_json)}
+    """)
     return response_json
 
 
@@ -99,6 +111,10 @@ async def load_files_as_dfs(p: Problem) -> list[pd.DataFrame]:
     
     files_dfs = await run_file_loading_script(script)
     valid_dfs = [df for df in files_dfs if isinstance(df, pd.DataFrame) and not df.empty]
+    print(f"""
+    {"=" * 100}
+    {len(p.filenames)} attached files loaded as {len(valid_dfs)} dataframes.
+    """)
     return valid_dfs
 
 
@@ -117,6 +133,11 @@ async def run_file_loading_script(script, max_tries = 4) -> list[pd.DataFrame]:
             if isinstance(files_dfs, list):
                 return files_dfs
             else:
+                print(f"""
+                {"=" * 100}
+                Final File Loading Script:
+                {script}
+                """)
                 return []
 
         except Exception as e:
@@ -141,7 +162,7 @@ async def run_file_loading_script(script, max_tries = 4) -> list[pd.DataFrame]:
             script = response.get("fixed_script", "")
 
             fix_description = response.get("fix_description", "").strip()
-
+            
             fix_history.append(f"Attempt {attempt + 1}: {fix_description}")
     return []
 
@@ -155,12 +176,17 @@ async def webscrape_tables_if_needed(p: Problem) -> list[pd.DataFrame]:
 
     response_json = await ask_llm(contents = [prompt_text], response_schema = WEBSCRAPE_URL_SCHEMA)
     URL = response_json.get("URL")
-    if not URL: return []
+    if not URL: 
+        return []
     try: 
         scraped_tables = pd.read_html(URL)
 
         valid_tables = [table for table in scraped_tables if not table.empty and 
-            any(not str(col).startswith("Unnamed") and not isinstance(col, int) for col in table.columns)]        
+            any(not str(col).startswith("Unnamed") and not isinstance(col, int) for col in table.columns)]  
+        print(f"""
+        {"=" * 100}
+        {len(valid_tables)} tables from {URL} loaded as {len(valid_tables)} dataframes.
+        """)
         return valid_tables
     
     except ValueError as e:
@@ -187,13 +213,14 @@ async def find_question_answers(p: Problem) -> list:
     answers = []
 
     for qno, script in enumerate(scripts):
-        ans = await run_question_script(script, qno, p)
+        question_string = p.questions_list[qno]
+        ans = await run_question_script(script, question_string, p)
         answers.append(json_compatible(ans))
     return answers
 
 
 
-async def run_question_script(script: str, qno: int, p, max_tries: int = 4):
+async def run_question_script(script: str, question_string: str, p: Problem, max_tries: int = 4):
     from prompt_util import FIX_QUESTION_SCRIPT_TEMPLATE, FIX_QUESTION_SCRIPT_SCHEMA
 
     fix_history = []
@@ -211,6 +238,11 @@ async def run_question_script(script: str, qno: int, p, max_tries: int = 4):
                 answer = env["find_answer"](p.dfs)
             else:
                 answer = env["find_answer"]()
+            print(f"""
+            {"=" * 100}
+            Final Script For '{question_string}':
+            {script}
+            """)
             return answer
         
         except Exception as e:        
@@ -222,7 +254,7 @@ async def run_question_script(script: str, qno: int, p, max_tries: int = 4):
                     script = script,
                     traceback_text = create_traceback_text(e),
                     fix_history_text = '\n-'.join(fix_history) if fix_history else 'None',
-                    question_string = p.questions_list[qno]
+                    question_string = question_string
                 )                
                 response = await ask_llm(
                     contents = [prompt_text],
@@ -251,10 +283,14 @@ async def generate_output(p: Problem, max_tries=4):
         response = await ask_llm(contents=[prompt_text], response_schema=OUTPUT_SCRIPT_SCHEMA)
         script = response.get("script")
         try:
-            print(script)
             env = {'__builtins__': builtins}
             exec(script, env)
             output = env["create_output"](p.answers) # type: ignore
+            print(f"""
+            {"=" * 100}
+            Final Output Generation Script:
+            {script}
+            """)
             return output
         except Exception as e:
             if attempt < max_tries - 1:
