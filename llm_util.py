@@ -20,8 +20,6 @@ load_dotenv(".venv/secrets.env")
 API_KEYS = [os.environ.get(f"API_KEY_{i}") for i in range(1, 5)]
 
 async def ask_llm(contents: list, response_schema: dict):
-    print("="*100)
-    print(contents[0])
     for model in MODELS:
         for kidx, api_key in enumerate(API_KEYS):
             try:
