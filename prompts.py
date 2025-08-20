@@ -96,7 +96,7 @@ files_dfs = [
     pd.read_excel("{problem_dir}/data2.xlsx", sheet_name="Sheet2")
 ]
 ```
-Note: Your output will be executed via Python's exec() function. Return only a complete, valid Python script containing all imports and the construction of `files_dfs`. Do not include any explanations, comments, or markdown formatting.
+Note: Your output will be executed via Python's exec() function without any manual intervention. Return only a complete, valid Python script containing all imports and the construction of `files_dfs`. Do not include any explanations, comments, or markdown formatting.
     """.strip()
 
 
@@ -169,7 +169,7 @@ INPUT:
 
 {"\n".join(f"- {q}" for q in questions)}
 
-{_describe_dfs(dfs)}
+{_describe_dfs(dfs) if len(dfs) > 0 else ""}
 
 INSTRUCTIONS:
 - The output must include one script per question, in the same order as the questions appear.
@@ -178,6 +178,8 @@ INSTRUCTIONS:
 - Import all necessary packages explicitly within each script.
 - Do NOT include explanations, comments, or markdown formatting in the output.
 - The `find_answer` function should NOT produce any side effects such as printing or file I/O.
+
+Note: Your output will be executed via Python's exec() function without any manual intervention. Return only a complete, valid Python script containing all imports and the construction of `files_dfs`. Do not include any explanations, comments, or markdown formatting.
 """.strip()
 
 
@@ -204,7 +206,7 @@ Here are the inputs:
 PROBLEM METADATA:
 {data_source_desc}
 
-{_describe_dfs(dfs)}
+{_describe_dfs(dfs) if len(dfs) > 0 else ""}
 
 TARGET QUESTION:
 {target_question}
@@ -217,13 +219,8 @@ TRACEBACK:
 {_describe_traceback(e)}
 
 PREVIOUSLY TRIED FIXES:
-{"\n".join(f"- {fix}" for fix in tried_fixes)}
-
-
-⚠️ [VERY IMPORTANT] If the traceback suggests that the error is due to some package not being install, then it is NOT ALLOWED to install. 
-Find a different solution that DOES NOT USE the missing package.
-Packages that are definitely installed: `pandas`, `numpy`, `scipy`, `matplotlib`, `seaborn`, and `sklearn`. This list is not exhaustive.
-    """.strip()
+{"\n".join(f"- {fix}" for fix in tried_fixes) if tried_fixes else "No Fixes Tried"}
+""".strip()
 
 
 def output_script(
@@ -272,8 +269,8 @@ YOU MUST FOLLOW THESE RULES:
 - Add the `data:image/<filetype>;base64,` prefix to base64 strings IF required by the output format  OTHERWISE don't include it.
 - DO NOT use json.dumps() or any form of manual JSON serialization.
 - The output must be JSON-serializable (i.e., contain only data types that can be converted to JSON).
-- Only output the complete Python script containing necessary imports (if any) and the create_output function.
-- Do not include any explanations, comments, or example usages—only output the code.
+
+Note: Your output will be executed via Python's exec() function without any manual intervention. Return only a complete, valid Python script containing all imports and the construction of `files_dfs`. Do not include any explanations, comments, or markdown formatting.
 """
 
 
@@ -328,7 +325,9 @@ YOUR TASK
   - For other types, use appropriate dummy values.
 - The function must return a native Python data structure (e.g., dict, list) — **do not use `json.dumps()`** or other serializers.
 - The output must be valid and JSON-serializable.
-- Return only the **fixed script** as a raw code snippet — no explanations, comments, or additional text.
+
+Note: Your output will be executed via Python's exec() function without any manual intervention. Return only a complete, valid Python script containing all imports and the construction of `files_dfs`. Do not include any explanations, comments, or markdown formatting.
+
     """.strip()
 
 
@@ -344,10 +343,10 @@ def _describe_attachments(images: list, filenames: list[str], problem_dir: str) 
     return desc
 
 
-def _describe_traceback(e: Exception, max_lines=15):
+def _describe_traceback(e: Exception, max_lines=20):
     tb_lines = traceback.format_exception(type(e), e, e.__traceback__)
     full_traceback = "".join(tb_lines)
-    sanitized_traceback = re.sub(r'File ".*?",', 'File "<redacted>",', full_traceback)
+    sanitized_traceback = re.sub(r'File ".*?"', 'File "<redacted>",', full_traceback)
     # Keep only the last max_lines lines
     tb_split = sanitized_traceback.strip().split("\n")
     shortened = "\n".join(tb_split[-max_lines:])
@@ -366,7 +365,7 @@ def _describe_dfs(dfs: list[DataFrame]):
         dfs_desc += "\n---\n"
 
     return f"""
-The required data has been loaded into a list of Pandas DataFrames named `dfs`.
+You are provided with a list of dataframes named `dfs`.
 Each DataFrame must be accessed using its index: `dfs[<table_index>]`.
 
 DATA SNIPPETS:
@@ -381,6 +380,7 @@ INSTRUCTIONS FOR USING DATAFRAMES:
 - 🧹 [VERY IMPORTANT] Clean and preprocess **numerical columns** using regular expressions if needed (e.g., remove symbols, convert types).
 
 Adhere strictly to these rules to ensure clean, efficient, and accurate analysis.
+Note: Your output will be executed via Python's exec() function without any manual intervention. Return only a complete, valid Python script containing all imports and the construction of `files_dfs`. Do not include any explanations, comments, or markdown formatting.
     """.strip()
 
 
@@ -398,6 +398,7 @@ def _describe_answers(
         result.append(f"...and {len(answers) - max_items} more items not shown.")
 
     return "\n".join(result)
+
 
 
 
