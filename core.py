@@ -1,5 +1,4 @@
 import io
-import os
 import uuid
 import builtins
 import numpy as np
@@ -9,6 +8,8 @@ from pathlib import Path
 from fastapi import Request
 from starlette.datastructures import UploadFile
 
+import os
+import sys 
 import importlib
 import subprocess
 import traceback
@@ -18,6 +19,11 @@ import schemas
 import tracker
 from gemini import ask_gemini
 
+_TEMP_PACKAGE_DIR = os.path.abspath("vendor")
+os.makedirs(_TEMP_PACKAGE_DIR, exist_ok=True)
+
+if _TEMP_PACKAGE_DIR not in sys.path:
+    sys.path.insert(0, _TEMP_PACKAGE_DIR)
 
 class Problem:
     def __init__(self) -> None:
@@ -334,20 +340,21 @@ def _make_package_installations(packages: list[str]) -> None:
         try:
             importlib.import_module(package)
         except ImportError:
-            print(f"⬇️ Installing package '{package}' using uv...")
+            print(f"⬇️ Installing package '{package}' to ./vendor ...")
             try:
                 subprocess.run(
-                    ["uv", "pip", "install", "--system", package],
+                    ["uv", "pip", "install", "--target", _TEMP_PACKAGE_DIR, package],
                     check=True,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     text=True,
                 )
-                print(f"✅ Successfully installed '{package}'.")
+                print(f"✅ Successfully installed '{package}' to ./vendor.")
             except subprocess.CalledProcessError as e:
                 print(f"❌ Failed to install package '{package}'. Error:")
                 print(e.stderr.strip())
             except Exception as e:
                 print(f"❌ Unexpected error while installing '{package}': {e}")
                 traceback.print_exception(type(e), e, e.__traceback__)
+
 
