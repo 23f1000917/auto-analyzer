@@ -164,10 +164,13 @@ async def webscrape_tables_if_needed(p: Problem) -> list[pd.DataFrame]:
     response_json = await ask_gemini(
         contents=[prompt_text], response_json_schema=schemas.webscrape_url
     )
-    URL = response_json.get("URL", None)
+    URLs = response_json.get("URLs", [])
     try:
-        scraped_tables = pd.read_html(URL)
-
+        scraped_tables = []
+        for URL in URLs:
+            try: scraped_tables.extend(pd.read_html(URL))
+            except: pass 
+            
         valid_tables = [
             table
             for table in scraped_tables
@@ -177,7 +180,7 @@ async def webscrape_tables_if_needed(p: Problem) -> list[pd.DataFrame]:
                 for col in table.columns
             )
         ]
-        tracker.log_webscraped_tables(URL, valid_tables)
+        tracker.log_webscraped_tables(URLs, valid_tables)
         return valid_tables
 
     except Exception:
@@ -356,5 +359,6 @@ def _make_package_installations(packages: list[str]) -> None:
             except Exception as e:
                 print(f"❌ Unexpected error while installing '{package}': {e}")
                 traceback.print_exception(type(e), e, e.__traceback__)
+
 
 
