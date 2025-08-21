@@ -84,6 +84,7 @@ OTHER REQUIREMENTS:
 - Do **not** use try-except blocks
 - Return **only** the final Python script with necessary imports and the `files_dfs` list fully constructed
 - The script should be executable and handle all files given
+- The script should contain detailed comments about each step
 
 EXAMPLE:
 
@@ -131,17 +132,17 @@ def webscrape_url(data_source_desc: str) -> str:
 You are provided with an INPUT that describes data sources for a data analysis task.
 
 YOUR TASK:
-Extract and return the URL of the webpage that needs to be scraped. If no such webpage is described, return `null`.
+Extract and return the list of URLs of ALL the webpages that need to be **scraped**. If no such webpages are described, return [].
 
 INSTRUCTIONS:
 - Only return a URL if **web scraping** is explicitly mentioned in the input.
-- The URL must point to a standard **webpage** suitable for scraping.
+- The URLs must point to standard **webpages** suitable for scraping.
 - Do **not** return URLs related to:
   - Database connections
   - Direct file downloads (e.g., .csv, .xls, .zip)
   - API endpoints (e.g., ending in `.json`, containing `/api/`, etc.)
 - Make sure the URL is valid and well-formed.
-- If the input lacks a relevant webpage for scraping, return `null`.
+- If the input lacks a relevant webpage for scraping, return [].
 
 INPUT:
 {data_source_desc}
@@ -398,6 +399,7 @@ def _describe_answers(
         result.append(f"...and {len(answers) - max_items} more items not shown.")
 
     return "\n".join(result)
+
 
 
 
