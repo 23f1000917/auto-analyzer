@@ -179,6 +179,7 @@ INSTRUCTIONS:
 - Import all necessary packages explicitly within each script.
 - Do NOT include explanations, comments, or markdown formatting in the output.
 - The `find_answer` function should NOT produce any side effects such as printing or file I/O.
+- IMPORTANT NOTE: If the questions require making a database query, only query the **smallest** subset of the data required for the question. You have to prevent large datasets being loaded into memory at once.
 
 Note: Your output will be executed via Python's exec() function without any manual intervention. Return only a complete, valid Python script containing all imports and the construction of `files_dfs`. Do not include any explanations, comments, or markdown formatting.
 """.strip()
@@ -375,7 +376,6 @@ DATA SNIPPETS:
 INSTRUCTIONS FOR USING DATAFRAMES:
 
 - If all the needed data to solve the problem is present in the snippets, access data **only** via `dfs[<table_index>]`. 
-- If the questions require making a database query, you may do so.
 - ✅ Always select the **smallest possible subset** of DataFrames necessary to answer **all** the questions.
 - 🚫 Do **not** join, merge, or concatenate DataFrames **unless** it is explicitly required to answer a question.
 - 🧹 [VERY IMPORTANT] Clean and preprocess **numerical columns** using regular expressions if needed (e.g., remove symbols, convert types).
@@ -399,6 +399,7 @@ def _describe_answers(
         result.append(f"...and {len(answers) - max_items} more items not shown.")
 
     return "\n".join(result)
+
 
 
 
