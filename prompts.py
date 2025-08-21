@@ -55,28 +55,15 @@ Extract metadata from the provided input with absolute precision. Do not add, in
 def files_dfs_script(data_source_desc: str, problem_dir: str) -> str:
     return f"""
 You will be given an input related to data sources. 
-Write a Python script that loads **all tables** or data structures from each file into pandas DataFrames.
+Write a Python script that loads all tables or data structures from each file into pandas DataFrames.
 
 INPUT:
 {data_source_desc}
 
-SUPPORTED FILE TYPES AND HOW TO LOAD:
-
-- CSV and TSV: `pd.read_csv()`
-- Excel (.xls, .xlsx): `pd.read_excel()`, load **all sheets**
-- JSON: `pd.read_json()`
-- Parquet: `pd.read_parquet()`
-- ZIP: extract all files, load all supported files inside
-- PDF: extract tables using `pdfplumber`
-- SQLite database (.sqlite, .db): use `sqlite3` or `sqlalchemy` to list all tables and load each via `pd.read_sql_query()`
-- HDF5 (.h5): use `pd.read_hdf()`, load all keys as separate DataFrames
-- Other common formats you can handle: include appropriate code to load them as pandas DataFrames if possible
-- If a file format is unsupported or unknown, skip it silently
-
 FOR EACH FILE:
-
 - Extract **all tables** or datasets available
 - Append each loaded DataFrame to a list named `files_dfs`
+- See the format of the file and data data source details to correctly convert the files into dataframes suitable for analysis.
 
 OTHER REQUIREMENTS:
 
@@ -399,6 +386,7 @@ def _describe_answers(
         result.append(f"...and {len(answers) - max_items} more items not shown.")
 
     return "\n".join(result)
+
 
 
 
