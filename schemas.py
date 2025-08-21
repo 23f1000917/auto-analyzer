@@ -64,8 +64,17 @@ fix_files_dfs_script = {
 
 webscrape_url = {
     "type": "object",
-    "properties": {"URL": {"type": ["string", "null"]}},
-    "required": ["URL"],
+    "properties": {
+        "URLs": {
+            "type": "array",
+            "description" : "list of URLs that need to be scraped",
+            "items": {
+                "type": "string",
+                "description": "url of the webpage"
+            }
+        }
+    },
+    "required": ["URLs"],
     "additionalProperties": False,
 }
 
@@ -163,3 +172,4 @@ fix_output_script = {
     },
     "additionalProperties": False,
 }
+
