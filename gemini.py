@@ -63,9 +63,8 @@ async def ask_gemini(contents: list, response_json_schema: dict):
                 error_str = str(e)
                 if "429" in error_str:
                     asyncio.create_task(mark_exhausted_temporarily(api_key, model))
-                    continue
 
-                print(f"[FAILED] {model} with API_KEY_{kidx}: {error_str}")
+                print(f"[FAILED] {model} with API_KEY_{kidx}: {error_str[:25]+"..."}")
                 continue
 
     raise Exception("Gemini failed to respond after trying all key-model combinations.")
@@ -82,6 +81,7 @@ def _get_config(model, response_json_schema):
         response_mime_type="application/json",
         response_json_schema=response_json_schema,
     )
+
 
 
 
