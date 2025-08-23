@@ -20,25 +20,31 @@ load_dotenv(".venv/secrets.env")
 API_KEYS = [os.environ.get(f"API_KEY_{i}") for i in range(0, 6) if os.environ.get(f"API_KEY_{i}")]
 
 # Global exhausted combo tracker
-exhausted_combos = set()  # Set of (api_key, model) tuples
+exhausted_combos = set() 
+exhausted_lock = asyncio.Lock() 
 
 
-async def mark_exhausted_temporarily(api_key, model):
-    combo = (api_key, model)
-    exhausted_combos.add(combo)
-    print(f"[RESOURCE_EXHAUSTED] Marked {model} with key as exhausted for 30s")
+async def mark_exhausted_temporarily(kidx, model):
+    combo = (kidx, model)
+    async with exhausted_lock: # ✨ Acquire lock to safely modify the set
+        exhausted_combos.add(combo)
+    print(f"[RESOURCE_EXHAUSTED] Marked {model} with API_KEY_{kidx} as exhausted for 30s")
     await asyncio.sleep(EXHAUST_COOLDOWN)
-    exhausted_combos.discard(combo)
-    print(f"[COOLDOWN ENDED] {model} with key is now available again")
+    async with exhausted_lock: # ✨ Acquire lock to safely modify the set again
+        exhausted_combos.discard(combo)
+    print(f"[COOLDOWN ENDED] {model} with API_KEY_{kidx} is now available again")
 
 
 async def ask_gemini(contents: list, response_json_schema: dict):
     for model in MODELS:
         for kidx, api_key in enumerate(API_KEYS):
-            key_model = (api_key, model)
+            key_model = (kidx, model)
 
-            if key_model in exhausted_combos:
-                print(f"[SKIP] {model} with api_key_{kidx} is temporarily exhausted.")
+            async with exhausted_lock: # 
+                is_exhausted = key_model in exhausted_combos
+
+            if is_exhausted:
+                print(f"[SKIP] {model} with API_KEY_{kidx} is temporarily exhausted.")
                 continue
 
             try:
@@ -55,14 +61,14 @@ async def ask_gemini(contents: list, response_json_schema: dict):
 
                 if not response.text:
                     raise ValueError("LLM response has no text")
-
-                print(f"[SUCCESS] {model} with api_key_{kidx}")
-                return json.loads(response.text)
+                response_json = json.loads(response.text)
+                print(f"[SUCCESS] {model} with API_KEY_{kidx}")
+                return response_json
 
             except Exception as e:
                 error_str = str(e)
                 if "429" in error_str:
-                    asyncio.create_task(mark_exhausted_temporarily(api_key, model))
+                    asyncio.create_task(mark_exhausted_temporarily(kidx, model))
 
                 print(f"[FAILED] {model} with API_KEY_{kidx}: {error_str[:25]+"..."}")
                 continue
@@ -81,6 +87,7 @@ def _get_config(model, response_json_schema):
         response_mime_type="application/json",
         response_json_schema=response_json_schema,
     )
+
 
 
 
