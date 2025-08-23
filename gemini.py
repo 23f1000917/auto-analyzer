@@ -19,7 +19,7 @@ MODELS = [
 load_dotenv(".venv/secrets.env")
 API_KEYS = [os.environ.get(f"API_KEY_{i}") for i in range(0, 6) if os.environ.get(f"API_KEY_{i}")]
 
-Global exhausted combo tracker
+# Global exhausted combo tracker
 exhausted_combos = set()  # Set of (api_key, model) tuples
 
 
@@ -81,6 +81,7 @@ def _get_config(model, response_json_schema):
         response_mime_type="application/json",
         response_json_schema=response_json_schema,
     )
+
 
 
 
