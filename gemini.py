@@ -19,27 +19,27 @@ MODELS = [
 load_dotenv(".venv/secrets.env")
 API_KEYS = [os.environ.get(f"API_KEY_{i}") for i in range(0, 6) if os.environ.get(f"API_KEY_{i}")]
 
-# Global exhausted combo tracker
-# exhausted_combos = set()  # Set of (api_key, model) tuples
+Global exhausted combo tracker
+exhausted_combos = set()  # Set of (api_key, model) tuples
 
 
-# async def mark_exhausted_temporarily(api_key, model):
-#     combo = (api_key, model)
-#     exhausted_combos.add(combo)
-#     print(f"[RESOURCE_EXHAUSTED] Marked {model} with key as exhausted for 30s")
-#     await asyncio.sleep(EXHAUST_COOLDOWN)
-#     exhausted_combos.discard(combo)
-#     print(f"[COOLDOWN ENDED] {model} with key is now available again")
+async def mark_exhausted_temporarily(api_key, model):
+    combo = (api_key, model)
+    exhausted_combos.add(combo)
+    print(f"[RESOURCE_EXHAUSTED] Marked {model} with key as exhausted for 30s")
+    await asyncio.sleep(EXHAUST_COOLDOWN)
+    exhausted_combos.discard(combo)
+    print(f"[COOLDOWN ENDED] {model} with key is now available again")
 
 
 async def ask_gemini(contents: list, response_json_schema: dict):
     for model in MODELS:
         for kidx, api_key in enumerate(API_KEYS):
-            # key_model = (api_key, model)
+            key_model = (api_key, model)
 
-            # if key_model in exhausted_combos:
-            #     print(f"[SKIP] {model} with api_key_{kidx} is temporarily exhausted.")
-            #     continue
+            if key_model in exhausted_combos:
+                print(f"[SKIP] {model} with api_key_{kidx} is temporarily exhausted.")
+                continue
 
             try:
                 print(f"Trying {model} with API_KEY_{kidx}")
@@ -50,7 +50,7 @@ async def ask_gemini(contents: list, response_json_schema: dict):
                         model=model,
                         config=_get_config(model, response_json_schema),
                     ),
-                    timeout=30,
+                    timeout=40,
                 )
 
                 if not response.text:
@@ -61,9 +61,9 @@ async def ask_gemini(contents: list, response_json_schema: dict):
 
             except Exception as e:
                 error_str = str(e)
-                # if "429" in error_str:
-                #     asyncio.create_task(mark_exhausted_temporarily(api_key, model))
-                #     continue
+                if "429" in error_str:
+                    asyncio.create_task(mark_exhausted_temporarily(api_key, model))
+                    continue
 
                 print(f"[FAILED] {model} with API_KEY_{kidx}: {error_str}")
                 continue
@@ -82,5 +82,6 @@ def _get_config(model, response_json_schema):
         response_mime_type="application/json",
         response_json_schema=response_json_schema,
     )
+
 
 
