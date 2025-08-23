@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from google.genai import Client, types
 
 
-EXHAUST_COOLDOWN = 60  # seconds
+EXHAUST_COOLDOWN = 30  # seconds
 MODELS = [
     "gemini-2.5-pro",
     "gemini-2.5-flash",
@@ -26,7 +26,7 @@ exhausted_combos = set()  # Set of (api_key, model) tuples
 async def mark_exhausted_temporarily(api_key, model):
     combo = (api_key, model)
     exhausted_combos.add(combo)
-    print(f"[RESOURCE_EXHAUSTED] Marked {model} with key as exhausted for 60s")
+    print(f"[RESOURCE_EXHAUSTED] Marked {model} with key as exhausted for 30s")
     await asyncio.sleep(EXHAUST_COOLDOWN)
     exhausted_combos.discard(combo)
     print(f"[COOLDOWN ENDED] {model} with key is now available again")
@@ -64,7 +64,7 @@ async def ask_gemini(contents: list, response_json_schema: dict):
 
             except Exception as e:
                 error_str = str(e)
-                if "RESOURCE_EXHAUSTED" in error_str:
+                if "429" in error_str:
                     asyncio.create_task(mark_exhausted_temporarily(api_key, model))
                     continue
 
@@ -85,3 +85,4 @@ def _get_config(model, response_json_schema):
         response_mime_type="application/json",
         response_json_schema=response_json_schema,
     )
+
