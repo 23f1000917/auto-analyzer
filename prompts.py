@@ -8,7 +8,7 @@ def problem_metadata(
 ) -> str:
     return f"""
 **INPUT ANALYSIS TASK**
-Extract metadata from the provided input with absolute precision. Do not add, infer, or modify any information.
+Extract detailed metadata from the provided input with absolute precision.
 
 **INPUT CONTENT**
 {questions_text}
@@ -25,7 +25,7 @@ Extract metadata from the provided input with absolute precision. Do not add, in
 1. Identify ALL data locations (DBs, APIs, files, URLs)
 2. Specify EXACT access methods (SQL queries, API endpoints, file paths)
 3. Extract STRUCTURAL DETAILS:
-   - File paths/patterns (use wildcards where specified)
+   - File paths/patterns/internal-file-structure (use wildcards where specified)
    - Data formats (CSV, Parquet, JSON, etc.)
    - Schema details (tables, columns, data types)
    - Sample data representations
@@ -54,16 +54,16 @@ Extract metadata from the provided input with absolute precision. Do not add, in
 
 def files_dfs_script(data_source_desc: str, problem_dir: str) -> str:
     return f"""
-You will be given an input related to data sources. 
-Write a Python script that loads all tables or data structures from each file into pandas DataFrames.
-
-INPUT:
+Here is a description of data sources for an analysis task:
 {data_source_desc}
+
+Write a Python script that loads all tables or data structures from each file into pandas DataFrames.
 
 FOR EACH FILE:
 - Extract **all tables** or datasets available
 - Append each loaded DataFrame to a list named `files_dfs`
-- See the format of the file and data data source details to correctly convert the files into dataframes suitable for analysis.
+- See the format of the file and given description to correctly convert the files into dataframes suitable for analysis.
+- If the files can hold multiple datasets/tables, each one should be present in the `files_dfs` list as an individual dataframe.
 
 OTHER REQUIREMENTS:
 
@@ -71,7 +71,7 @@ OTHER REQUIREMENTS:
 - Do **not** use try-except blocks
 - Return **only** the final Python script with necessary imports and the `files_dfs` list fully constructed
 - The script should be executable and handle all files given
-- The script should contain detailed comments about each step
+- The script should contain your entire thought process as comments **before** the main code block.
 
 EXAMPLE:
 
@@ -110,6 +110,7 @@ PREVIOUSLY TRIED FIXES:
 TRY EXCEPT POLICY:
 {try_except_policy}
 
+Understand the intention and purpose of the script.
 Only fix the sections of the script that cause the traceback.
     """.strip()
 
@@ -149,7 +150,7 @@ You will be given an INPUT containing:
 - A list of questions
 
 Your task is to write a separate Python script for each question, each defining a function named exactly `find_answer({find_answer_args})` that returns the answer.
-
+The script MUST include your entire thought process as comments in the code.
 ---
 
 INPUT:
@@ -386,6 +387,7 @@ def _describe_answers(
         result.append(f"...and {len(answers) - max_items} more items not shown.")
 
     return "\n".join(result)
+
 
 
 
