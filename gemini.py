@@ -8,8 +8,8 @@ from google.genai import Client, types
 MODELS = [
     "gemini-2.5-pro",
     "gemini-2.5-flash",
-    "gemini-2.0-flash",
     "gemini-2.5-flash-lite",
+    "gemini-2.0-flash"
 ]
 
 # load secrets
@@ -50,18 +50,11 @@ async def ask_gemini(contents: list, response_json_schema: dict):
 def _get_config(model, response_json_schema):
     config = None
 
-    if model == "gemini-2.5-pro":
+    if model.startswith("gemini-2.5"):
         config = types.GenerateContentConfig(
             response_mime_type="application/json",
             response_json_schema=response_json_schema,
-            thinking_config=types.ThinkingConfig(thinking_budget=128),
-        )
-
-    elif model == "gemini-2.5-flash":
-        config = types.GenerateContentConfig(
-            response_mime_type="application/json",
-            response_json_schema=response_json_schema,
-            thinking_config=types.ThinkingConfig(thinking_budget=0),
+            thinking_config=types.ThinkingConfig(thinking_budget=2000),
         )
     else:
         config = types.GenerateContentConfig(
@@ -69,4 +62,5 @@ def _get_config(model, response_json_schema):
             response_json_schema=response_json_schema,
         )
     return config
+
 
