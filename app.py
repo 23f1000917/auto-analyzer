@@ -1,3 +1,4 @@
+import os 
 import shutil
 import traceback
 from fastapi import FastAPI, Request
@@ -38,14 +39,13 @@ async def analyze(request: Request):
         p.answers = await find_answers_to_questions(p)
 
         output = await generate_output(p)
-        try:
-            shutil.rmtree(p.dir)
-        finally:
-            return output
+        
+        return output
 
     except Exception as e:
         traceback.print_exception(type(e), e, e.__traceback__)
-        try:
+        return {"error": "Analysis failed", "message": str(e)}
+    finally:
+        if p and os.path.exists(p.dir):
             shutil.rmtree(p.dir)
-        finally:
-            return {"error": "Analysis failed", "message": str(e)}
+
