@@ -106,7 +106,7 @@ async def load_files_as_dfs(p: Problem) -> list[pd.DataFrame]:
     return valid_dfs
 
 
-async def _run_files_dfs_script(script, max_tries=4) -> list[pd.DataFrame]:
+async def _run_files_dfs_script(script, max_tries=3) -> list[pd.DataFrame]:
     tried_fixes = []
 
     for attempt in range(max_tries):
@@ -211,7 +211,7 @@ async def find_answers_to_questions(p: Problem) -> list:
 
 
 async def _run_find_answer_script(
-    script: str, question_string: str, p: Problem, max_tries: int = 4
+    script: str, question_string: str, p: Problem, max_tries: int = 3
 ):
     tried_fixes = []
 
@@ -258,7 +258,7 @@ async def _run_find_answer_script(
                 return None
 
 
-async def generate_output(p: Problem, max_tries=4):
+async def generate_output(p: Problem, max_tries=3):
     tried_fixes = []
 
     prompt_text = prompts.output_script(
@@ -359,6 +359,7 @@ def _make_package_installations(packages: list[str]) -> None:
             except Exception as e:
                 print(f"❌ Unexpected error while installing '{package}': {e}")
                 traceback.print_exception(type(e), e, e.__traceback__)
+
 
 
 
